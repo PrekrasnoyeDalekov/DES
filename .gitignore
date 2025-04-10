@@ -1,0 +1,20 @@
+#   RedPanda development files
+*.dev
+*.bookmarks
+*.debug
+*_private.h
+
+#   RedPanda build files
+app.ico
+*_private.rc
+*_private.res
+*.layout
+*.o
+*.exe
+
+
+#   vscode settings
+.vscode/
+
+#   test files
+test_*

@@ -1,0 +1,47 @@
+# Project: DES
+# Makefile created by Red Panda C++ 2.25.1
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+RES      = DES_private.res
+OBJ      = decrypt.o encrypt.o des.o cipherkey.o main.o $(RES)
+LINKOBJ  = decrypt.o encrypt.o des.o cipherkey.o main.o DES_private.res
+CLEANOBJ  =  decrypt.o encrypt.o des.o cipherkey.o main.o  DES_private.res DES.exe
+LIBS     = 
+INCS     =  
+CXXINCS  =  
+BIN      = DES.exe
+CXXFLAGS = $(CXXINCS)  -g3 -Og -pipe -Werror -D__DEBUG__
+CFLAGS   = $(INCS)  -std=gnu99 -g3 -Og -pipe -Werror -D__DEBUG__
+RM       = rm
+WINDRESFLAGS  = 
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	-$(RM) $(CLEANOBJ)
+
+$(BIN): $(OBJ)
+	$(CC) $(LINKOBJ) -o $(BIN) $(LIBS)
+
+decrypt.o: decrypt.c decrypt.h encrypt.h des.h cipherkey.h
+	$(CC) -c decrypt.c -o decrypt.o $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+encrypt.o: encrypt.c decrypt.h encrypt.h des.h cipherkey.h
+	$(CC) -c encrypt.c -o encrypt.o $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+des.o: des.c decrypt.h encrypt.h des.h cipherkey.h
+	$(CC) -c des.c -o des.o $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+cipherkey.o: cipherkey.c decrypt.h encrypt.h des.h cipherkey.h
+	$(CC) -c cipherkey.c -o cipherkey.o $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+main.o: main.c decrypt.h encrypt.h des.h cipherkey.h
+	$(CC) -c main.c -o main.o $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+DES_private.res: DES_private.rc 
+	$(WINDRES) -i DES_private.rc --input-format=rc -o DES_private.res -O coff $(WINDRESFLAGS) 
+
