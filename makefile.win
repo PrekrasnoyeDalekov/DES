@@ -12,8 +12,8 @@ LIBS     =
 INCS     =  
 CXXINCS  =  
 BIN      = DES.exe
-CXXFLAGS = $(CXXINCS)  -g3 -Og -pipe -Werror -D__DEBUG__
-CFLAGS   = $(INCS)  -std=gnu99 -g3 -Og -pipe -Werror -D__DEBUG__
+CXXFLAGS = $(CXXINCS)  -g3 -O2 -pipe -Werror -D__DEBUG__
+CFLAGS   = $(INCS)  -std=gnu11 -g3 -O2 -pipe -Werror 
 RM       = rm
 WINDRESFLAGS  = 
 

@@ -28,7 +28,7 @@ void encryptFile(FILE *fp,uint64_t plaintext[BLOCK_NUM],
     while ((read_bytes = fread((void *)plaintext,sizeof(uint8_t),BUFF_SIZE,fp)) == BUFF_SIZE){
         desEncrypt(plaintext,BLOCK_NUM,ciphertext);
         for(size_t i = 0;i < BLOCK_NUM;i++){
-            fprintf(stdout, "%016llx", ciphertext[i]);
+            fprintf(out, "%016llx", ciphertext[i]);
         }
     }
 
@@ -37,15 +37,15 @@ void encryptFile(FILE *fp,uint64_t plaintext[BLOCK_NUM],
     size_t blocks = (read_bytes+to_fill)/sizeof(uint64_t); // 填充后有多少blocks
     memset(((void *)plaintext+read_bytes),to_fill,to_fill);
     desEncrypt(plaintext,blocks,ciphertext);
-    if(verbose){
-        fprintf(stderr,"to_fill = %d\n",to_fill);
-        fprintf(stderr, "index: hex value\n");
-        for(int j = 0;j < blocks;j++){
-            fprintf(stderr,"%5d: %016llx\n",j,plaintext[j]);
-        }
-    }
     for(size_t i = 0;i < blocks;i++){
-        fprintf(stdout, "%016llx", ciphertext[i]);
+        fprintf(out, "%016llx", ciphertext[i]);
+    }
+    if(verbose){
+        fprintf(stderr,"[INFO] PKCS7 TO_FILL %d B\n",to_fill);
+        fprintf(stderr, "[INFO] index: plaintext hex value\n");
+        for(int j = 0;j < blocks;j++){
+            fprintf(stderr,"[INFO] %5d: %016llx\n",j,plaintext[j]);
+        }
     }
 }
 
@@ -58,10 +58,7 @@ void decryptFile(FILE *fp,uint64_t ciphertext[BLOCK_NUM],
             error_handler("The file contains invalid hex\n");
         if(i == BLOCK_NUM){
             desDecrypt(ciphertext,BLOCK_NUM,plaintext);
-            // for(int j = 0;j < BUFF_SIZE;j++){
-            //     fprintf(stdout, "%c", *((char *)plaintext+j));
-            // }
-            fwrite((void *)plaintext,BUFF_SIZE,1,stdout);
+            fwrite((void *)plaintext,BUFF_SIZE,1,out);
             sscanf(buff,"%llx",&ciphertext[0]);
             i = 1;
             continue;
@@ -81,21 +78,16 @@ void decryptFile(FILE *fp,uint64_t ciphertext[BLOCK_NUM],
         desDecrypt(ciphertext,BLOCK_NUM,plaintext);
         uint8_t to_strip = *(uint8_t *)((void *)&plaintext[BLOCK_NUM-1]+7);
         memset((void *)plaintext[BLOCK_NUM]+8-to_strip,0,to_strip);
+        fwrite((void *)plaintext,BUFF_SIZE-to_strip,1,out);
         if(verbose){
-            fprintf(stderr,"to_strip = %d\n",to_strip);
-            fprintf(stderr,"index: plaintext value\n");
+            fprintf(stderr,"[INFO] PKCS7 TO_STRIP %d B\n",to_strip);
+            fprintf(stderr,"[INFO] INDEX: PLAINTEXT CHAR\n");
             for(int j = 0;j < i;j++){
-                fprintf(stderr,"%5d: ",j);
-                for(int k = 0;k < sizeof(uint64_t);k++){
-                fprintf(stderr,"%c",*((char *)plaintext[j]+k));
-                }
+                fprintf(stderr,"      %5d: ",j);
+                fwrite((void *)&plaintext[j],sizeof(uint64_t),1,stderr);
                 fprintf(stderr,"\n");
             }
         }
-        // for(int j = 0;j < BUFF_SIZE-to_strip;j++){
-        //     fprintf(stdout,"%c",*((char *)plaintext+j));
-        // }
-        fwrite((void *)plaintext,BUFF_SIZE-to_strip,1,stdout);
     }
     else{
         /*
@@ -103,23 +95,17 @@ void decryptFile(FILE *fp,uint64_t ciphertext[BLOCK_NUM],
          * 然后,ciphertext中有i块密文
         */
         desDecrypt(ciphertext,i,plaintext);
-
         uint8_t to_strip = *(uint8_t *)((void *)&plaintext[i]-1);
+        fwrite((void *)plaintext,i*sizeof(uint64_t)-to_strip,1,out);
         if(verbose){
-            fprintf(stderr,"to_strip = %d\n",to_strip);
-            fprintf(stderr,"index: plaintext value\n");
+            fprintf(stderr,"[INFO] TO_STRIP %d B\n",to_strip);
+            fprintf(stderr,"[INFO] INDEX: PLAINTEXT CHAR\n");
             for(int j = 0;j < i;j++){
-                fprintf(stderr,"%5d: ",j);
-                for(int k = 0;k < sizeof(uint64_t);k++){
-                fprintf(stderr,"%c",*((char *)&plaintext[j]+k));
-                }
+                fprintf(stderr,"       %5d: ",j);
+                fwrite((void *)&plaintext[j],sizeof(uint64_t),1,stderr);
                 fprintf(stderr,"\n");
             }
         }
-        // for(int j = 0;j < i*sizeof(uint64_t)-to_strip;j++){
-        //     fprintf(stdout,"%c",*((char *)plaintext+j));
-        // }
-        fwrite((void *)plaintext,i*sizeof(uint64_t)-to_strip,1,stdout);
     }
 }
 
@@ -133,38 +119,54 @@ void encryptMessage(const char *message,uint64_t plaintext[BLOCK_NUM],
     size_t blocks = (read_bytes+to_fill)/sizeof(uint64_t); // 当前块的索引
     desEncrypt(plaintext,blocks,ciphertext);
     for(int j = 0;j < blocks;j++){
-        fprintf(stdout, "%016llx", ciphertext[j]);
+        fprintf(out, "%016llx", ciphertext[j]);
+    }
+    if(verbose){
+        fprintf(stderr,"[INFO] TO_FILL %dB\n",to_fill);
+        fprintf(stderr,"[INFO] INDEX: HEX VALUE\n");
+        for(int j = 0;j < BLOCK_NUM;j++){
+            fprintf(stderr,"       %5d: %016llx\n",j,plaintext[j]);
+        }
     }
 }
     
 void decryptMessage(const char *message,uint64_t plaintext[BLOCK_NUM],
                   uint64_t ciphertext[BLOCK_NUM]){
     if(strlen(message)%16)
-        error_handler("Error: The message is not a multiple of 16 bytes\n");
+        error_handler("The message is not a multiple of 16 bytes\n");
     int i = 0;
     while(1){
     for(i = 0;i < BLOCK_NUM && *message;i++,message+=16){
         if(sscanf(message,"%16llx",&ciphertext[i]) != 1)
-            error_handler("Error: The message contains invalid hex\n");
+            error_handler("The message contains invalid hex\n");
     }
     if(i == BLOCK_NUM){
         desDecrypt(ciphertext,BLOCK_NUM,plaintext);
-        for(int j = 0;j < BUFF_SIZE;j++)
-            fprintf(stdout, "%c", *(char *)(plaintext+j));
+        uint8_t to_strip = *(uint8_t *)((void *)&plaintext[BLOCK_NUM]+7);
+        fwrite((void *)plaintext,BUFF_SIZE,1,out);
+        if(verbose){
+            fprintf(stderr,"[INFO] TO_STRIP %dB\n",to_strip);
+            fprintf(stderr,"[INFO] INDEX: HEX VALUE\n");
+            for(int j = 0;j < i;j++){
+                fprintf(stderr,"      %5d: ",j);
+                fwrite((void *)plaintext+j,sizeof(uint64_t),1,stderr);
+                fprintf(stderr,"\n");
+            }
+        }
     }
     else{
         // 去除PCKS7填充
         desDecrypt(ciphertext,i,plaintext);
         uint8_t to_strip = *(uint8_t *)((void *)&plaintext[i]-1);
+        fwrite((void *)plaintext,i*sizeof(uint64_t)-to_strip,1,out);
         if(verbose){
-            fprintf(stderr,"index: hex value\n");
+            fprintf(stderr,"[INFO] TO_STRIP %d B\n\n",to_strip);
+            fprintf(stderr,"[INFO] INDEX: HEX VALUE\n");
             for(int j = 0;j < i;j++){
-                fprintf(stderr,"%5d: %016llx\n",j,plaintext[j]);
+                fprintf(stderr,"      %5d: ",j);
+                fwrite((void *)plaintext+j,sizeof(uint64_t),1,stderr);
+                fprintf(stderr,"\n");
             }
-            fprintf(stderr,"to_strip = %d\n\n",to_strip);
-        }
-        for(int j = 0;j < i*sizeof(uint64_t)-to_strip;j++){
-            fprintf(stdout,"%c",*((char *)plaintext+j));
         }
         break;
     }

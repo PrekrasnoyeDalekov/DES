@@ -5,7 +5,6 @@
 *_private.h
 
 #   RedPanda build files
-app.ico
 *_private.rc
 *_private.res
 *.layout
