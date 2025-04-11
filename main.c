@@ -155,7 +155,7 @@ double elapsed;
 		else if(hex){
 			plaintext[0] = hex;
 			desEncrypt(plaintext,1,ciphertext);
-			fprintf(stdout, "%llx", ciphertext[0]);
+			fprintf(out, "%llx", ciphertext[0]);
 			goto RETURN;
 		}
 		else if(message){
@@ -172,7 +172,7 @@ double elapsed;
 		else if(hex){
 			ciphertext[0] = hex;
 			desDecrypt(ciphertext,1,plaintext);
-			fprintf(stdout, "%016llx", plaintext[0]);
+			fprintf(out, "%016llx", plaintext[0]);
 			goto RETURN;
 		}
 		else if(message){
@@ -188,6 +188,7 @@ double elapsed;
 			start.tv_nsec) / 1e9;
 			fprintf(stderr,"[INFO] RUNNING TIME: %f seconds",elapsed);
 		}
+		fclose(out);
 		return 0;
 	}
 	exit(EXIT_FAILURE);

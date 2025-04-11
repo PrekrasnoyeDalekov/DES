@@ -54,8 +54,6 @@ void decryptFile(FILE *fp,uint64_t ciphertext[BLOCK_NUM],
     int i = 0;
     char buff[17] = {0};
     while(fgets(buff,17,fp)){
-        if(strlen(buff) != 16 && !feof(fp))
-            error_handler("The file contains invalid hex\n");
         if(i == BLOCK_NUM){
             desDecrypt(ciphertext,BLOCK_NUM,plaintext);
             fwrite((void *)plaintext,BUFF_SIZE,1,out);
@@ -70,42 +68,19 @@ void decryptFile(FILE *fp,uint64_t ciphertext[BLOCK_NUM],
         error_handler("The file contains invalid hex\n");
 
     // 去除PKCS7填充
-    if(i == BLOCK_NUM){
-        /*
-         * 恰好没有密文,plaintext中有BLOCK_NUM块明文,
-         * 最后一块需要strip
-        */
-        desDecrypt(ciphertext,BLOCK_NUM,plaintext);
-        uint8_t to_strip = *(uint8_t *)((void *)&plaintext[BLOCK_NUM-1]+7);
-        memset((void *)plaintext[BLOCK_NUM]+8-to_strip,0,to_strip);
-        fwrite((void *)plaintext,BUFF_SIZE-to_strip,1,out);
-        if(verbose){
-            fprintf(stderr,"[INFO] PKCS7 TO_STRIP %d B\n",to_strip);
-            fprintf(stderr,"[INFO] INDEX: PLAINTEXT CHAR\n");
-            for(int j = 0;j < i;j++){
-                fprintf(stderr,"      %5d: ",j);
-                fwrite((void *)&plaintext[j],sizeof(uint64_t),1,stderr);
-                fprintf(stderr,"\n");
-            }
+    if(i){
+    desDecrypt(ciphertext,i,plaintext);
+    uint8_t to_strip = *(uint8_t *)((void *)&plaintext[i]-1);
+    fwrite((void *)plaintext,i*sizeof(uint64_t)-to_strip,1,out);
+    if(verbose){
+        fprintf(stderr,"[INFO] TO_STRIP %d B\n",to_strip);
+        fprintf(stderr,"[INFO] INDEX: PLAINTEXT CHAR\n");
+        for(int j = 0;j < i;j++){
+            fprintf(stderr,"       %5d: ",j);
+            fwrite((void *)&plaintext[j],sizeof(uint64_t),1,stderr);
+            fprintf(stderr,"\n");
         }
     }
-    else{
-        /*
-         * i > 0,
-         * 然后,ciphertext中有i块密文
-        */
-        desDecrypt(ciphertext,i,plaintext);
-        uint8_t to_strip = *(uint8_t *)((void *)&plaintext[i]-1);
-        fwrite((void *)plaintext,i*sizeof(uint64_t)-to_strip,1,out);
-        if(verbose){
-            fprintf(stderr,"[INFO] TO_STRIP %d B\n",to_strip);
-            fprintf(stderr,"[INFO] INDEX: PLAINTEXT CHAR\n");
-            for(int j = 0;j < i;j++){
-                fprintf(stderr,"       %5d: ",j);
-                fwrite((void *)&plaintext[j],sizeof(uint64_t),1,stderr);
-                fprintf(stderr,"\n");
-            }
-        }
     }
 }
 
