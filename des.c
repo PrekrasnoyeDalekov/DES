@@ -111,39 +111,23 @@ void decryptMessage(const char *message,uint64_t plaintext[BLOCK_NUM],
         error_handler("The message is not a multiple of 16 bytes\n");
     int i = 0;
     while(1){
+    if(!*message) break;
     for(i = 0;i < BLOCK_NUM && *message;i++,message+=16){
         if(sscanf(message,"%16llx",&ciphertext[i]) != 1)
             error_handler("The message contains invalid hex\n");
     }
-    if(i == BLOCK_NUM){
-        desDecrypt(ciphertext,BLOCK_NUM,plaintext);
-        uint8_t to_strip = *(uint8_t *)((void *)&plaintext[BLOCK_NUM]+7);
-        fwrite((void *)plaintext,BUFF_SIZE,1,out);
-        if(verbose){
-            fprintf(stderr,"[INFO] TO_STRIP %dB\n",to_strip);
-            fprintf(stderr,"[INFO] INDEX: HEX VALUE\n");
-            for(int j = 0;j < i;j++){
-                fprintf(stderr,"      %5d: ",j);
-                fwrite((void *)plaintext+j,sizeof(uint64_t),1,stderr);
-                fprintf(stderr,"\n");
-            }
+    // 去除PCKS7填充
+    desDecrypt(ciphertext,i,plaintext);
+    uint8_t to_strip = *(uint8_t *)((void *)&plaintext[i]-1);
+    fwrite((void *)plaintext,i*sizeof(uint64_t)-to_strip,1,out);
+    if(verbose){
+        fprintf(stderr,"[INFO] TO_STRIP %d B\n\n",to_strip);
+        fprintf(stderr,"[INFO] INDEX: HEX VALUE\n");
+        for(int j = 0;j < i;j++){
+            fprintf(stderr,"      %5d: ",j);
+            fwrite((void *)plaintext+j,sizeof(uint64_t),1,stderr);
+            fprintf(stderr,"\n");
         }
-    }
-    else{
-        // 去除PCKS7填充
-        desDecrypt(ciphertext,i,plaintext);
-        uint8_t to_strip = *(uint8_t *)((void *)&plaintext[i]-1);
-        fwrite((void *)plaintext,i*sizeof(uint64_t)-to_strip,1,out);
-        if(verbose){
-            fprintf(stderr,"[INFO] TO_STRIP %d B\n\n",to_strip);
-            fprintf(stderr,"[INFO] INDEX: HEX VALUE\n");
-            for(int j = 0;j < i;j++){
-                fprintf(stderr,"      %5d: ",j);
-                fwrite((void *)plaintext+j,sizeof(uint64_t),1,stderr);
-                fprintf(stderr,"\n");
-            }
-        }
-        break;
     }
     }
     return ;
