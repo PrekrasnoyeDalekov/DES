@@ -26,7 +26,7 @@ git clone https://github.com/PrekrasnoyeDalekov/DES.git
 cd DES
 ```
 
-1. 编译项目
+2. 编译项目
 
 ```shell
 mingw32-make -f makefile.win all
@@ -34,7 +34,7 @@ mingw32-make -f makefile.win all
 
 此项目目前在Windows环境下使用MinGW编译器开发。
 
-1. 运行程序
+3. 运行程序
 
 ### 基本用法
 
@@ -62,25 +62,25 @@ mingw32-make -f makefile.win all
 ./DES -e -k 0x12345678 -x 0x789abc -v
 ```
 
-1. 加密消息
+2. 加密消息
 
 ```shell
 ./DES -e -k 0x12345678 -m "Hello, World!"
 ```
 
-1. 加密文件，并将加密结果输出到指定文件
+3. 加密文件，并将加密结果输出到指定文件
 
 ```shell
 ./DES -e -k 0x12345678 -f input.txt -o encrypted.txt
 ```
 
-1. 解密文件，并将解密结果输出到指定文件
+4. 解密文件，并将解密结果输出到指定文件
 
 ```shell
 ./DES -d -k 0x12345678 -f encrypted.txt -o decrypted.txt
 ```
 
-1. 对同一文件进行加密再解密，其校验和与源文件相同
+5. 对同一文件进行加密再解密，其校验和与原文件相同
 
 ```shell
 PS > .\DES.exe -e -k 0x999 -f DES.exe -o encrypted
