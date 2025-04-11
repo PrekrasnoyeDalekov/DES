@@ -27,7 +27,7 @@ void print_usage() {
     printf("Examples:\n");
     printf("  ./DES -e -k 0x12345678 -x 0x789abc -v\n");
     printf("  ./DES -e -k 0x12345678 -m \"Hello, World!\"\n");
-    printf("  ./DES -e -k 0x12345678 -f file.txt -o encrypted_file.txt\n");
+    printf("  ./DES -e -k 0x12345678 -f input.txt -o encrypted_file.txt\n");
     printf("  ./DES -d -k 0x12345678 -f encrypted_file.txt -o decrypted_file.txt\n");
 }
 
